@@ -80,9 +80,16 @@ button.icon { width: 36px; height: 36px; padding: 0; display: inline-grid; place
 .hud { margin-left: auto; display: inline-flex; align-items: center; gap: 12px; padding: 7px 8px 7px 16px; border-radius: 999px; background: color-mix(in srgb, var(--paper) 72%, transparent); border: 1.5px solid var(--line-strong); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); text-transform: none; letter-spacing: .02em; font-size: 12.5px; color: var(--soft); }
 .hud .n { font-size: 24px; line-height: 1; font-weight: 800; color: var(--blue); font-variant-numeric: tabular-nums; display: inline-block; min-width: 1.2ch; text-align: center; }
 .hud.bump .n { animation: bump .35s cubic-bezier(.2, .8, .2, 1); }
-.hud .goal { color: var(--muted); font-weight: 700; }
 .hud button.small { padding: 4px 11px; }
 @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.5); } 100% { transform: scale(1); } }
+#boom { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: .3em; padding: 16px; text-align: center; pointer-events: none; background: rgba(10, 4, 20, .5); transition: opacity .5s; }
+#boom.out { opacity: 0; }
+#boom b { display: block; font-weight: 900; font-size: clamp(64px, 19vw, 260px); line-height: 1; letter-spacing: -.02em; white-space: nowrap; color: #ff2d4a; -webkit-text-stroke: clamp(3px, .6vw, 8px) #ffffff; paint-order: stroke fill; text-shadow: 0 .06em 0 #7a0016, 0 0 60px rgba(255, 45, 74, .65); }
+#boom span { display: block; font-weight: 900; font-size: clamp(24px, 6.4vw, 92px); line-height: 1.2; padding: .1em .45em; background: #111; color: #fff; border: 3px solid #fff; }
+#boom.boom-in b { animation: slam .5s cubic-bezier(.2, .9, .2, 1) both, shake .45s .5s linear 4; }
+#boom.boom-in span { animation: slam .5s .25s cubic-bezier(.2, .9, .2, 1) both; }
+@keyframes slam { from { transform: scale(3.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes shake { 0%, 100% { transform: translate(0); } 25% { transform: translate(-8px, 4px) rotate(-1deg); } 75% { transform: translate(8px, -4px) rotate(1deg); } }
 .cloudfoot { position: relative; height: 110px; overflow: hidden; }
 .cloudfoot::before { content: ""; position: absolute; inset: -30px; filter: blur(16px); background: radial-gradient(150px 70px at 8% 85%, #ffb3d4, transparent 72%), radial-gradient(190px 80px at 30% 95%, #c9b3ff, transparent 72%), radial-gradient(170px 70px at 55% 88%, #ffd2a1, transparent 72%), radial-gradient(200px 80px at 78% 96%, #9fdcff, transparent 72%), radial-gradient(150px 70px at 96% 86%, #a8f0d4, transparent 72%); opacity: .85; }
 .cloudfoot::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 50%; background: linear-gradient(var(--paper), transparent); }
@@ -222,7 +229,7 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       <li>Prompt</li>
     </ol>
     <div class="credit"><span>ChatGPT · Gemini · Stable Diffusion · Midjourney</span><span>Positive / Negative</span>
-      <span class="hud" id="hud"><span>打落 <span class="n" id="hudN">0</span> 隻</span><span class="goal" id="hudGoal" aria-live="polite">天上有胖麻雀，點一下試試</span><button class="small" id="hudReset" type="button" hidden>放晴重來</button></span>
+      <span class="hud" id="hud"><span role="status">打落 <span class="n" id="hudN">0</span> 隻</span><button class="small" id="hudReset" type="button" hidden>放晴重來</button></span>
     </div>
   </div>
 </header>
@@ -633,6 +640,8 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
   <small>線上傳圖反推提示詞工具包 · Gemini Vision</small>
 </footer>
 
+<div id="boom" hidden role="alert"><b>百鳥斬!!</b><span>請愛護小動物!!!</span></div>
+
 <script src="three.min.js"></script>
 <script>
 (function () {
@@ -713,10 +722,12 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
   /* ---------- 胖麻雀 */
   (function () {
     var hero = document.querySelector('.hero'), host = document.getElementById('play');
-    var hudEl = document.getElementById('hud'), nEl = document.getElementById('hudN'), goalEl = document.getElementById('hudGoal'), resetBtn = document.getElementById('hudReset');
+    var hudEl = document.getElementById('hud'), nEl = document.getElementById('hudN'), resetBtn = document.getElementById('hudReset');
     if (!hero || !host) return;
     var cv = document.createElement('canvas'), ctx = cv.getContext('2d'); host.appendChild(cv);
-    var W = 0, H = 0, birds = [], feathers = [], drops = [], count = 0, level = 0, flash = 0, nextFlash = 3, spawnT = 0, vis = true, raf = 0, last = 0;
+    var W = 0, H = 0, birds = [], feathers = [], drops = [], bolt = null, count = 0, level = 0, flash = 0, nextFlash = 2, spawnT = 0, vis = true, raf = 0, last = 0, rbA = 0, sunA = 0, finaleOn = false;
+    function lvl(n) { return n >= 80 ? 5 : n >= 50 ? 4 : n >= 30 ? 3 : n >= 20 ? 2 : n >= 10 ? 1 : 0; }
+    function storm() { return level === 2 || level === 3; }
     var R = Math.random, TAU = Math.PI * 2;
 
     function size() {
@@ -734,28 +745,35 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       for (var i = 0; i < 9; i++) feathers.push({ x: b.x, y: b.y, vx: (R() - .5) * 220, vy: -60 - R() * 160, rot: R() * TAU, vr: (R() - .5) * 8, life: 0, max: .9 + R() * .7, c: R() < .5 ? '#d6b48a' : '#f0e1c6' });
     }
     function setLevel(l) {
-      level = l; weather.target = [0, .55, .95][l];
-      if (still) { weather.k = weather.target; if (weather.cb) weather.cb(); }
-      var wanted = [0, Math.round(W / 9), Math.round(W / 3.4)][l];
+      level = l; weather.target = [0, .55, .95, .95, 0, 0][l];
+      if (still) { weather.k = weather.target; rbA = l >= 4 ? 1 : 0; sunA = l === 5 ? 1 : 0; if (weather.cb) weather.cb(); }
+      var wanted = [0, Math.round(W / 9), Math.round(W / 3.4), Math.round(W / 3.4), 0, 0][l];
       while (drops.length < wanted) drops.push({ x: R() * W, y: R() * H, l: 10 + R() * 14, v: .75 + R() * .5 });
       drops.length = Math.min(drops.length, wanted);
     }
     function hud() {
       nEl.textContent = count;
-      goalEl.textContent = level === 0 ? (count ? '再 ' + (10 - count) + ' 隻就會下雨' : '天上有胖麻雀，點一下試試') : level === 1 ? '下雨了，再 ' + (20 - count) + ' 隻變暴雨' : '暴雨中，打雷了';
       resetBtn.hidden = !count;
       hudEl.classList.remove('bump'); void hudEl.offsetWidth; hudEl.classList.add('bump');
+    }
+    var boom = document.getElementById('boom');
+    function startFinale() {
+      finaleOn = true; boom.hidden = false; boom.classList.remove('out', 'boom-in'); void boom.offsetWidth; boom.classList.add('boom-in');
+      setTimeout(function () { boom.classList.add('out'); }, 3500);
+      setTimeout(function () { boom.hidden = true; finaleOn = false; count = 0; setLevel(0); hud(); if (still) render(0); }, 4000);
     }
     function hit(b, x, y) { var dx = (x - b.x) / (b.s * 1.7), dy = (y - b.y) / (b.s * 1.3); return dx * dx + dy * dy <= 1; }
     function at(e) { var q = cv.getBoundingClientRect(); return [e.clientX - q.left, e.clientY - q.top]; }
     function strike(x, y) {
+      if (finaleOn) return false;
       for (var i = birds.length - 1; i >= 0; i--) {
         var b = birds[i];
         if (!b.fall && hit(b, x, y)) {
           burst(b); count++;
           if (still) { birds.splice(i, 1); setTimeout(function () { spawn(true); render(0); }, 900); }
           else { b.fall = true; b.vy = -160; b.vx *= .3; b.spin = (R() - .5) * 9; }
-          var l = count >= 20 ? 2 : count >= 10 ? 1 : 0; if (l !== level) setLevel(l);
+          var l = lvl(count); if (l !== level) setLevel(l);
+          if (count >= 100) startFinale();
           hud(); if (still) render(0);
           return true;
         }
@@ -790,18 +808,35 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       ctx.fillStyle = '#6c4125'; ell(-.45, 0, .72, .3); ctx.fillStyle = '#8c5a35'; ell(-.5, -.05, .45, .14); ctx.restore();
       ctx.restore();
     }
+    var RB = ['#ff5a5f', '#ff9f43', '#ffd93d', '#4cd97b', '#3db8ff', '#5a6cff', '#a35cff'];
+    function rainbow(a, dbl) {
+      var cx = W * .62, cy = H * 1.18, base = Math.max(H * .8, W * .28), bw = Math.max(7, H * .034);
+      ctx.save(); ctx.lineWidth = bw + .8;
+      for (var i = 0; i < 7; i++) { ctx.globalAlpha = .62 * a; ctx.strokeStyle = RB[i]; ctx.beginPath(); ctx.arc(cx, cy, base - i * bw, Math.PI, TAU); ctx.stroke(); }
+      if (dbl) for (var j = 0; j < 7; j++) { ctx.globalAlpha = .3 * dbl; ctx.strokeStyle = RB[6 - j]; ctx.beginPath(); ctx.arc(cx, cy, base * 1.3 - j * bw * .9, Math.PI, TAU); ctx.stroke(); }
+      ctx.restore();
+    }
     var dark = function () { var r = document.documentElement; return r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
     function render(t) {
       ctx.clearRect(0, 0, W, H);
       if (weather.k > .01) { ctx.fillStyle = dark() ? 'rgba(0,0,16,' + (weather.k * .3) + ')' : 'rgba(36,40,80,' + (weather.k * .36) + ')'; ctx.fillRect(0, 0, W, H); }
+      if (sunA > .01) {
+        var sx = W * .87, sy = Math.max(70, H * .2), sr = Math.min(H * .1, 54);
+        var sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, Math.max(W, H) * .6); sg.addColorStop(0, 'rgba(255,226,140,' + .55 * sunA + ')'); sg.addColorStop(1, 'rgba(255,226,140,0)'); ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
+        ctx.save(); ctx.globalAlpha = sunA; ctx.translate(sx, sy); ctx.rotate(t * .15); ctx.strokeStyle = '#ffc93c'; ctx.lineWidth = Math.max(4, sr * .12); ctx.lineCap = 'round';
+        for (var ri = 0; ri < 12; ri++) { ctx.rotate(TAU / 12); ctx.beginPath(); ctx.moveTo(sr * 1.3, 0); ctx.lineTo(sr * (ri % 2 ? 1.65 : 1.9), 0); ctx.stroke(); }
+        ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.arc(0, 0, sr, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff3a8'; ctx.beginPath(); ctx.arc(-sr * .25, -sr * .25, sr * .55, 0, TAU); ctx.fill(); ctx.restore();
+      }
+      if (rbA > .01) rainbow(rbA, 0);
       birds.forEach(function (b) { sparrow(b, t); });
       feathers.forEach(function (f) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - f.life / f.max); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.fillStyle = f.c; ctx.beginPath(); ctx.ellipse(0, 0, 6, 2.2, 0, 0, TAU); ctx.fill(); ctx.restore(); });
       if (drops.length) {
-        ctx.strokeStyle = dark() ? 'rgba(205,218,255,.5)' : 'rgba(64,84,160,.55)'; ctx.lineWidth = level === 2 ? 1.6 : 1.2; ctx.lineCap = 'round';
-        var slope = level === 2 ? .28 : .06; ctx.beginPath();
+        ctx.strokeStyle = dark() ? 'rgba(205,218,255,.5)' : 'rgba(64,84,160,.55)'; ctx.lineWidth = storm() ? 1.6 : 1.2; ctx.lineCap = 'round';
+        var slope = storm() ? .28 : .06; ctx.beginPath();
         drops.forEach(function (d) { ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * slope, d.y - d.l); });
         ctx.stroke();
       }
+      if (flash > .05 && bolt) { ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + Math.min(1, flash * 1.4) + ')'; ctx.shadowColor = '#bcd0ff'; ctx.shadowBlur = 18; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath(); bolt.forEach(function (pt, i) { i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]); }); ctx.stroke(); ctx.restore(); }
       if (flash > .01) { ctx.fillStyle = 'rgba(255,255,255,' + flash * .75 + ')'; ctx.fillRect(0, 0, W, H); }
     }
     function tick(dt, t) {
@@ -815,9 +850,12 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
         else { b.x += b.vx * dt; b.y = b.base + Math.sin(t * b.f + b.ph) * b.amp; if ((b.vx > 0 && b.x > W + b.s * 3) || (b.vx < 0 && b.x < -b.s * 3)) birds.splice(i, 1); }
       }
       for (var j = feathers.length - 1; j >= 0; j--) { var f = feathers[j]; f.life += dt; f.vy += 420 * dt; f.vx *= .985; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.vr * dt; if (f.life > f.max) feathers.splice(j, 1); }
-      var sp = level === 2 ? 1.5 : 1;
-      drops.forEach(function (d) { d.y += d.v * 900 * sp * dt; d.x -= d.v * 900 * sp * dt * (level === 2 ? .28 : .06); if (d.y - d.l > H) { d.y = -d.l; d.x = R() * (W + 80); } });
-      if (level === 2) { nextFlash -= dt; if (nextFlash <= 0) { flash = 1; nextFlash = 3 + R() * 4; } }
+      var sp = storm() ? 1.5 : 1;
+      drops.forEach(function (d) { d.y += d.v * 900 * sp * dt; d.x -= d.v * 900 * sp * dt * (storm() ? .28 : .06); if (d.y - d.l > H) { d.y = -d.l; d.x = R() * (W + 80); } });
+      if (level === 3) { nextFlash -= dt; if (nextFlash <= 0) { flash = 1; nextFlash = 2 + R() * 3.5; var bx = W * (.12 + R() * .76), by = -10; bolt = [[bx, by]]; while (by < H * (.5 + R() * .35)) { by += 18 + R() * 30; bx += (R() - .5) * 60; bolt.push([bx, by]); } } }
+      rbA += ((level >= 4 ? 1 : 0) - rbA) * Math.min(1, dt * .9);
+      sunA += ((level === 5 ? 1 : 0) - sunA) * Math.min(1, dt * .8);
+
       flash *= Math.pow(.02, dt);
     }
     function loop(ms) { raf = 0; if (!vis || document.hidden) return; var t = ms / 1000, dt = Math.min(.05, t - last); last = t; tick(dt, t); render(t); raf = requestAnimationFrame(loop); }
