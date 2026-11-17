@@ -637,7 +637,7 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
 <div class="cloudfoot" aria-hidden="true"></div>
 <footer class="foot gutter">
   <p class="tagline">看圖，寫出提示詞。</p>
-  <small>線上傳圖反推提示詞工具包 · Gemini Vision · v0.5</small>
+  <small>線上傳圖反推提示詞工具包 · Gemini Vision · v0.6</small>
 </footer>
 
 <div id="boom" hidden role="alert"><b>百鳥斬!!</b><span>請愛護小動物!!!</span></div>
@@ -735,15 +735,25 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       W = hero.clientWidth; H = hero.clientHeight; if (!W || !H) return;
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    function target() { return W < 600 ? 3 : 5; }
+    function target() { return W < 600 ? 8 : 14; }
+    var FW = 256, FH = 240, NF = 8, SPR = new Image(), sprOK = false;
+    SPR.onload = function () { sprOK = true; if (still) render(0); };
+    SPR.src = 'sparrow.webp';
+    function pickWidth() {
+      var r = R(), k = W < 600 ? .6 : 1;
+      return k * (r < .28 ? 34 + R() * 18 : r < .58 ? 62 + R() * 24 : r < .82 ? 100 + R() * 30 : r < .95 ? 145 + R() * 40 : 210 + R() * 40);
+    }
     function spawn(inside) {
-      var dir = R() < .5 ? 1 : -1, s = (W < 600 ? 17 : 21) + R() * 8;
-      birds.push({ x: inside ? W * (.15 + R() * .7) : (dir > 0 ? -s * 2.5 : W + s * 2.5), y: H * (.14 + R() * .58), base: 0, s: s, dir: dir, vx: (still ? 0 : 55 + R() * 80) * dir, amp: 8 + R() * 16, f: .9 + R() * .9, fl: 14 + R() * 6, ph: R() * TAU, t: 0, fall: false, vy: 0, rot: 0, spin: 0 });
-      var b = birds[birds.length - 1]; b.base = b.y;
+      var dir = R() < .5 ? 1 : -1, w = pickWidth(), k = W < 600 ? .6 : 1;
+      var spd = still ? 0 : (330 - (w / k - 34) * .95) * (.85 + R() * .3);   /* 小的飛得快，大的飛得慢 */
+      var y = H * (.1 + R() * .65);
+      birds.push({ x: inside ? W * (.1 + R() * .8) : (dir > 0 ? -w : W + w), y: y, base: y, w: w, h: w * FH / FW, s: w / 3.4, dir: dir, vx: spd * dir, amp: w * (.05 + R() * .08), f: .9 + R() * .9, rate: .9 + R() * .5, fl: 14 + R() * 6, ph: R() * TAU, t: 0, fall: false, vy: 0, rot: 0, spin: 0 });
+      birds.sort(function (a, c) { return a.w - c.w; });   /* 大的畫在上層，也優先被點中 */
     }
     function burst(b) {
       if (still) return;
-      for (var i = 0; i < 9; i++) feathers.push({ x: b.x, y: b.y, vx: (R() - .5) * 220, vy: -60 - R() * 160, rot: R() * TAU, vr: (R() - .5) * 8, life: 0, max: .9 + R() * .7, c: R() < .5 ? '#d6b48a' : '#f0e1c6' });
+      var n = Math.round(6 + b.w / 16), k = Math.max(.6, b.w / 70), cs = ['#c98a5e', '#f3e6d2', '#a85f3a', '#e2c29b'];
+      for (var i = 0; i < n; i++) feathers.push({ x: b.x, y: b.y, vx: (R() - .5) * 220, vy: -60 - R() * 160, rot: R() * TAU, vr: (R() - .5) * 8, life: 0, max: .9 + R() * .7, k: k, c: cs[Math.floor(R() * cs.length)] });
     }
     function setLevel(l) {
       level = l; weather.target = [0, .55, .95, .95, 0, 0][l];
@@ -763,7 +773,7 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       setTimeout(function () { boom.classList.add('out'); }, 3500);
       setTimeout(function () { boom.hidden = true; finaleOn = false; count = 0; setLevel(0); hud(); if (still) render(0); }, 4000);
     }
-    function hit(b, x, y) { var dx = (x - b.x) / (b.s * 1.7), dy = (y - b.y) / (b.s * 1.3); return dx * dx + dy * dy <= 1; }
+    function hit(b, x, y) { var dx = (x - b.x) / (b.w * .52), dy = (y - b.y) / (b.h * .5); return dx * dx + dy * dy <= 1; }
     function at(e) { var q = cv.getBoundingClientRect(); return [e.clientX - q.left, e.clientY - q.top]; }
     function strike(x, y) {
       if (finaleOn) return false;
@@ -809,6 +819,18 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       ctx.fillStyle = '#6c4125'; ell(-.45, 0, .72, .3); ctx.fillStyle = '#8c5a35'; ell(-.5, -.05, .45, .14); ctx.restore();
       ctx.restore();
     }
+    function sprite(b, t) {
+      var fi = b.fall ? 0 : Math.floor(b.t * 11 * b.rate + b.ph) % NF;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot + (b.fall ? 0 : Math.cos(t * b.f + b.ph) * .07)); ctx.scale(b.dir, 1);
+      ctx.drawImage(SPR, (fi % 4) * FW, Math.floor(fi / 4) * FH, FW, FH, -b.w / 2, -b.h / 2, b.w, b.h);
+      if (b.fall) {
+        var ex = .101 * b.w, ey = -.129 * b.h, er = b.w * .032;
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(ex, ey, b.w * .048, 0, TAU); ctx.fill();
+        ctx.strokeStyle = '#2a1a14'; ctx.lineWidth = Math.max(1.5, b.w * .014); ctx.lineCap = 'round'; ctx.beginPath();
+        ctx.moveTo(ex - er, ey - er); ctx.lineTo(ex + er, ey + er); ctx.moveTo(ex + er, ey - er); ctx.lineTo(ex - er, ey + er); ctx.stroke();
+      }
+      ctx.restore();
+    }
     var RB = ['#ff5a5f', '#ff9f43', '#ffd93d', '#4cd97b', '#3db8ff', '#5a6cff', '#a35cff'];
     function rainbow(a, dbl) {
       var cx = W * .62, cy = H * 1.18, base = Math.max(H * .8, W * .28), bw = Math.max(7, H * .034);
@@ -829,8 +851,8 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
         ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.arc(0, 0, sr, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff3a8'; ctx.beginPath(); ctx.arc(-sr * .25, -sr * .25, sr * .55, 0, TAU); ctx.fill(); ctx.restore();
       }
       if (rbA > .01) rainbow(rbA, 0);
-      birds.forEach(function (b) { sparrow(b, t); });
-      feathers.forEach(function (f) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - f.life / f.max); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.fillStyle = f.c; ctx.beginPath(); ctx.ellipse(0, 0, 6, 2.2, 0, 0, TAU); ctx.fill(); ctx.restore(); });
+      birds.forEach(function (b) { if (sprOK) sprite(b, t); else sparrow(b, t); });
+      feathers.forEach(function (f) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - f.life / f.max); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.fillStyle = f.c; ctx.beginPath(); ctx.ellipse(0, 0, 6 * (f.k || 1), 2.2 * (f.k || 1), 0, 0, TAU); ctx.fill(); ctx.restore(); });
       if (drops.length) {
         ctx.strokeStyle = dark() ? 'rgba(205,218,255,.5)' : 'rgba(64,84,160,.55)'; ctx.lineWidth = storm() ? 1.6 : 1.2; ctx.lineCap = 'round';
         var slope = storm() ? .28 : .06; ctx.beginPath();
@@ -844,10 +866,10 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       weather.k += (weather.target - weather.k) * Math.min(1, dt * 1.3);
       spawnT -= dt;
       var flying = birds.filter(function (b) { return !b.fall; }).length;
-      if (spawnT <= 0 && flying < target()) { spawn(false); spawnT = .7 + R() * 1.6; }
+      if (spawnT <= 0 && flying < target()) { spawn(false); spawnT = .12 + R() * .3; }
       for (var i = birds.length - 1; i >= 0; i--) {
         var b = birds[i]; b.t += dt;
-        if (b.fall) { b.vy += 1500 * dt; b.y += b.vy * dt; b.x += b.vx * dt; b.rot += b.spin * dt; if (b.y > H + 80) birds.splice(i, 1); }
+        if (b.fall) { b.vy += 1500 * dt; b.y += b.vy * dt; b.x += b.vx * dt; b.rot += b.spin * dt; if (b.y > H + b.h) birds.splice(i, 1); }
         else { b.x += b.vx * dt; b.y = b.base + Math.sin(t * b.f + b.ph) * b.amp; if ((b.vx > 0 && b.x > W + b.s * 3) || (b.vx < 0 && b.x < -b.s * 3)) birds.splice(i, 1); }
       }
       for (var j = feathers.length - 1; j >= 0; j--) { var f = feathers[j]; f.life += dt; f.vy += 420 * dt; f.vx *= .985; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.vr * dt; if (f.life > f.max) feathers.splice(j, 1); }
@@ -867,7 +889,7 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
     size();
     var jump = /sparrow=(\d+)/.exec(location.hash);
     if (jump) { count = Math.min(99, +jump[1]); setLevel(lvl(count)); hud(); }
-    if (still) { for (var i = 0; i < 3; i++) spawn(true); render(0); } else { for (var k = 0; k < 3; k++) { spawn(true); } kick(); }
+    if (still) { for (var i = 0; i < 7; i++) spawn(true); render(0); } else { for (var k = 0; k < 9; k++) { spawn(true); } kick(); }
   })();
 
   /* ---------- 捲動進場 ---------- */
