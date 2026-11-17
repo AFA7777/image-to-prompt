@@ -160,6 +160,7 @@ dl.notes dd { margin: 0; }
               <option value="gpt">ChatGPT</option>
               <option value="gemini">Gemini</option>
               <option value="sd">Stable Diffusion</option>
+              <option value="mj">Midjourney</option>
             </select>
           </div>
           <div class="field">
@@ -323,12 +324,14 @@ dl.notes dd { margin: 0; }
   var TARGET = {
     gpt: '目標是在 ChatGPT 對話中生圖。正向提示詞寫成完整、具體的自然語句描述，以「生成一張圖片：」之類的指示開頭（依提示詞語言書寫），不用權重語法或標籤堆疊，並在句中說明畫面比例（橫式、直式或方形）。ChatGPT 沒有反向提示詞欄位，所以反向提示詞寫成可以直接接在正向提示詞後面的一段話，以「Avoid」或「請避免」開頭，逐項列出不應出現的元素。',
     gemini: '目標是在 Gemini 對話中生圖。正向提示詞寫成敘事式的自然語句，像在向攝影師或插畫家描述場景，交代主體、環境、鏡頭、光線與風格，不用權重語法或標籤堆疊，並在句中說明畫面比例。Gemini 沒有反向提示詞欄位，所以反向提示詞寫成可以直接接在正向提示詞後面的一段話，以「Do not include」或「請不要出現」開頭，逐項列出不應出現的元素。',
-    sd: '目標模型是 Stable Diffusion（含 SDXL）。正向提示詞寫成以逗號分隔的關鍵詞標籤，由最重要排到次要，最關鍵的 1 至 3 項可用 (keyword:1.2) 權重語法。反向提示詞同樣是逗號分隔的標籤，供 Negative prompt 欄位使用。'
+    sd: '目標模型是 Stable Diffusion（含 SDXL）。正向提示詞寫成以逗號分隔的關鍵詞標籤，由最重要排到次要，最關鍵的 1 至 3 項可用 (keyword:1.2) 權重語法。反向提示詞同樣是逗號分隔的標籤，供 Negative prompt 欄位使用。',
+    mj: '目標模型是 Midjourney。正向提示詞寫成精煉的描述片語，以逗號分隔，先寫主體，再寫環境、風格或媒材、光線、色彩與鏡頭，不用 (keyword:1.2) 權重語法，結尾依圖片比例附上 --ar 參數（例如 --ar 16:9）。反向提示詞寫成單獨一行 --no 參數，項目以逗號分隔，例如：--no text, watermark, people，只列最關鍵的 5 至 10 項。'
   };
   var NEG_HINT = {
     gpt: 'ChatGPT 沒有反向提示詞欄位。按「合併複製」把兩段接在一起，整段貼進對話即可。',
     gemini: 'Gemini 沒有反向提示詞欄位。按「合併複製」把兩段接在一起，整段貼進對話即可。',
-    sd: '貼進 Stable Diffusion 介面的 Negative prompt 欄位。'
+    sd: '貼進 Stable Diffusion 介面的 Negative prompt 欄位。',
+    mj: 'Midjourney 的 --no 參數要接在提示詞最後面。按「合併複製」會把兩段接成一行，直接貼到 /imagine 即可。'
   };
   function syncTarget() { var t = $('target').value; $('negHint').textContent = NEG_HINT[t]; $('copyBoth').hidden = t === 'sd'; }
   $('target').addEventListener('change', syncTarget); syncTarget();
@@ -458,7 +461,7 @@ dl.notes dd { margin: 0; }
     btn.addEventListener('click', function () {
       var both = btn.dataset.copy === 'both', label = both ? '合併複製' : '複製';
       var el = both ? posEl : $(btn.dataset.copy);
-      var value = both ? [posEl.value.trim(), negEl.value.trim()].filter(Boolean).join('\n\n') : el.value;
+      var value = both ? [posEl.value.trim(), negEl.value.trim()].filter(Boolean).join($('target').value === 'mj' ? ' ' : '\n\n') : el.value;
       if (!value) return;
       var done = function () { btn.textContent = '已複製'; setTimeout(function () { btn.textContent = label; }, 1500); };
       var fallback = function () { el.focus(); el.select(); btn.textContent = both ? '請分別複製兩段' : '已選取，請按 Ctrl+C'; setTimeout(function () { btn.textContent = label; }, 2500); };
