@@ -637,7 +637,7 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
 <div class="cloudfoot" aria-hidden="true"></div>
 <footer class="foot gutter">
   <p class="tagline">看圖，寫出提示詞。</p>
-  <small>線上傳圖反推提示詞工具包 · Gemini Vision</small>
+  <small>線上傳圖反推提示詞工具包 · Gemini Vision · v0.5</small>
 </footer>
 
 <div id="boom" hidden role="alert"><b>百鳥斬!!</b><span>請愛護小動物!!!</span></div>
@@ -742,6 +742,7 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
       var b = birds[birds.length - 1]; b.base = b.y;
     }
     function burst(b) {
+      if (still) return;
       for (var i = 0; i < 9; i++) feathers.push({ x: b.x, y: b.y, vx: (R() - .5) * 220, vy: -60 - R() * 160, rot: R() * TAU, vr: (R() - .5) * 8, life: 0, max: .9 + R() * .7, c: R() < .5 ? '#d6b48a' : '#f0e1c6' });
     }
     function setLevel(l) {
@@ -864,6 +865,8 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
     document.addEventListener('visibilitychange', kick);
     window.addEventListener('resize', function () { size(); if (still) render(0); });
     size();
+    var jump = /sparrow=(\d+)/.exec(location.hash);
+    if (jump) { count = Math.min(99, +jump[1]); setLevel(lvl(count)); hud(); }
     if (still) { for (var i = 0; i < 3; i++) spawn(true); render(0); } else { for (var k = 0; k < 3; k++) { spawn(true); } kick(); }
   })();
 
