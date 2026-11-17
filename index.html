@@ -4,42 +4,47 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>線上傳圖反推提示詞工具包</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: 海報式版面。長春花色外框包住整頁；頂部是泡泡填滿的巨大字標，其下為標題與說明；工具區左欄放圖片、金鑰、設定，右欄放結果；窄螢幕疊成單欄 */
+/* Layout: 彩色雲朵天空。頁首是粉彩漸層天空，三維彩雲在文字後方緩慢飄移；標題靠左、說明在下；工具區為左右兩欄圓角卡片，窄螢幕疊成單欄 */
 :root {
-  --paper: #ffffff;
-  --ink: #0b0c16;
-  --soft: #2b2e45;
-  --muted: #5d6285;
-  --card: #f5f6ff;
-  --blue: #2233ff;
-  --frame: #8d9cff;
-  --line: rgba(34, 51, 255, .16);
-  --line-strong: rgba(34, 51, 255, .34);
+  --paper: #fbfaff;
+  --ink: #1b1740;
+  --soft: #3a3566;
+  --muted: #655f8d;
+  --card: #f3f0ff;
+  --blue: #5b2fd4;
+  --line: rgba(91, 47, 212, .16);
+  --line-strong: rgba(91, 47, 212, .34);
   --neg: #b3126f;
   --danger: #b3261e;
-  --display: "Poppins", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Montserrat", "Avenir Next", system-ui, sans-serif;
+  --g1: #d6336c; --g2: #6d3cf0; --g3: #1b7fd9;
+  --sky: linear-gradient(180deg, #cfe6ff 0%, #ead9ff 48%, #ffd9d0 84%, var(--paper) 100%);
+  --display: "Plus Jakarta Sans", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #060821; --ink: #f2f4ff; --soft: #c8cdf2; --muted: #9298c4; --card: #0c1033;
-    --blue: #8d96ff; --frame: #424a85; --line: rgba(141, 150, 255, .18); --line-strong: rgba(141, 150, 255, .36);
-    --neg: #ff8ad9; --danger: #ff8a80; color-scheme: dark;
+    --paper: #0d0a24; --ink: #f3f0ff; --soft: #cfc9f5; --muted: #a29cce; --card: #15103a;
+    --blue: #b9a0ff; --line: rgba(185, 160, 255, .2); --line-strong: rgba(185, 160, 255, .4);
+    --neg: #ff8ad9; --danger: #ff8a80; --g1: #ff9ecb; --g2: #c4a8ff; --g3: #7fd3ff;
+    --sky: linear-gradient(180deg, #170c45 0%, #2b1561 52%, #4b1d5e 86%, var(--paper) 100%);
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #060821; --ink: #f2f4ff; --soft: #c8cdf2; --muted: #9298c4; --card: #0c1033;
-  --blue: #8d96ff; --frame: #424a85; --line: rgba(141, 150, 255, .18); --line-strong: rgba(141, 150, 255, .36);
-  --neg: #ff8ad9; --danger: #ff8a80; color-scheme: dark;
+  --paper: #0d0a24; --ink: #f3f0ff; --soft: #cfc9f5; --muted: #a29cce; --card: #15103a;
+  --blue: #b9a0ff; --line: rgba(185, 160, 255, .2); --line-strong: rgba(185, 160, 255, .4);
+  --neg: #ff8ad9; --danger: #ff8a80; --g1: #ff9ecb; --g2: #c4a8ff; --g3: #7fd3ff;
+  --sky: linear-gradient(180deg, #170c45 0%, #2b1561 52%, #4b1d5e 86%, var(--paper) 100%);
+  color-scheme: dark;
 }
 :root[data-theme="light"] { color-scheme: light; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 [hidden] { display: none !important; }
-body { min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--display); font-size: 15px; line-height: 1.6; border: clamp(6px, 1.1vw, 12px) solid var(--frame); -webkit-font-smoothing: antialiased; transition: background-color .4s, color .4s, border-color .4s; }
+body { min-height: 100vh; background: var(--paper); color: var(--ink); font-family: var(--display); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; transition: background-color .4s, color .4s; }
 .gutter { padding-left: clamp(16px, 4vw, 48px); padding-right: clamp(16px, 4vw, 48px); }
 .inner { max-width: 1240px; margin: 0 auto; }
 a { color: var(--blue); }
@@ -56,18 +61,23 @@ a { color: var(--blue); }
 button.icon { width: 36px; height: 36px; padding: 0; display: inline-grid; place-items: center; border: 1px solid var(--line); color: var(--soft); border-radius: 999px; }
 
 /* hero */
-.hero { padding-block: clamp(20px, 3vw, 36px) clamp(28px, 4vw, 48px); }
-#word { display: block; width: 100%; cursor: pointer; touch-action: manipulation; }
-.hero-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(16px, 3vw, 40px); align-items: end; margin-top: clamp(14px, 2.4vw, 28px); }
-@media (max-width: 820px) { .hero-grid { grid-template-columns: minmax(0, 1fr); } }
-.hero h1 { margin: 0; font-weight: 900; font-size: clamp(30px, 5.6vw, 68px); line-height: 1.08; letter-spacing: -.02em; text-wrap: balance; }
-.hero h1 em { font-style: normal; color: var(--blue); }
-.hero .blurb { margin: 0; color: var(--soft); max-width: 34em; }
-.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; font-weight: 800; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; }
-.flow li { border: 1.5px solid var(--line-strong); border-radius: 999px; padding: 5px 12px; color: var(--soft); }
-.flow li.arrow { border: 0; padding: 0; color: var(--blue); }
-.credit { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; margin-top: clamp(18px, 3vw, 32px); padding-top: 10px; border-top: 1.5px solid var(--ink); font-weight: 800; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; }
-.band { height: clamp(56px, 8vw, 104px); }
+.hero { position: relative; isolation: isolate; overflow: hidden; background: var(--sky); padding-block: clamp(56px, 9vw, 116px) clamp(40px, 6vw, 72px); }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: radial-gradient(40% 32% at 14% 30%, rgba(255, 143, 193, .45), transparent 70%), radial-gradient(34% 28% at 82% 18%, rgba(181, 156, 255, .5), transparent 70%), radial-gradient(44% 30% at 62% 78%, rgba(255, 184, 119, .4), transparent 70%); }
+.hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(to bottom, transparent, var(--paper)); pointer-events: none; }
+#sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+#sky canvas { display: block; width: 100%; height: 100%; }
+.hero .inner { position: relative; z-index: 1; }
+.eyebrow { margin: 0 0 18px; display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; background: color-mix(in srgb, var(--paper) 62%, transparent); border: 1px solid var(--line-strong); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font-weight: 800; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--blue); }
+.hero h1 { margin: 0; max-width: 11em; font-weight: 900; font-size: clamp(38px, 7.4vw, 96px); line-height: 1.04; letter-spacing: -.02em; text-wrap: balance; }
+.hero h1 em { font-style: normal; background: linear-gradient(95deg, var(--g1), var(--g2) 55%, var(--g3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .blurb { color: var(--ink); text-shadow: 0 0 10px var(--paper), 0 0 22px var(--paper); margin: clamp(18px, 2.6vw, 28px) 0 0; max-width: 34em; font-size: clamp(15px, 1.8vw, 18px); color: var(--soft); }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; font-weight: 800; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; }
+.flow li { border: 1.5px solid var(--line-strong); border-radius: 999px; padding: 5px 13px; color: var(--soft); background: color-mix(in srgb, var(--paper) 62%, transparent); }
+.flow li.arrow { border: 0; background: none; padding: 0; color: var(--blue); }
+.credit { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: clamp(26px, 4vw, 48px); padding-top: 12px; border-top: 1.5px solid var(--line-strong); font-weight: 800; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--soft); }
+.cloudfoot { position: relative; height: 110px; overflow: hidden; }
+.cloudfoot::before { content: ""; position: absolute; inset: -30px; filter: blur(16px); background: radial-gradient(150px 70px at 8% 85%, #ffb3d4, transparent 72%), radial-gradient(190px 80px at 30% 95%, #c9b3ff, transparent 72%), radial-gradient(170px 70px at 55% 88%, #ffd2a1, transparent 72%), radial-gradient(200px 80px at 78% 96%, #9fdcff, transparent 72%), radial-gradient(150px 70px at 96% 86%, #a8f0d4, transparent 72%); opacity: .85; }
+.cloudfoot::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 50%; background: linear-gradient(var(--paper), transparent); }
 
 /* tool */
 main { padding-block: clamp(28px, 4vw, 52px) clamp(40px, 6vw, 72px); }
@@ -140,9 +150,6 @@ dl.notes dd { margin: 0; color: var(--soft); }
 .foot small { font-weight: 800; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 
 /* ---------- 動畫 ---------- */
-.band.live { height: clamp(170px, 26vw, 320px); position: relative; overflow: hidden; cursor: grab; }
-.band.live canvas { display: block; width: 100%; height: 100%; }
-.band-hint { position: absolute; right: clamp(16px, 4vw, 48px); bottom: 12px; margin: 0; padding: 3px 10px; border-radius: 999px; background: #0b0c16; color: #ffffff; font-weight: 800; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; pointer-events: none; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
@@ -184,7 +191,7 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
 
 <nav class="nav gutter" aria-label="頁首">
   <div class="inner">
-    <span class="brand">PROMPT<b>.</b></span>
+    <span class="brand">圖<b>→</b>詞</span>
     <span class="nav-right">
       <span class="nav-tag">Gemini Vision</span>
       <button class="icon" id="theme" type="button" aria-label="切換深色與淺色">
@@ -195,23 +202,19 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
 </nav>
 
 <header class="hero gutter">
+  <div id="sky" aria-hidden="true"></div>
   <div class="inner">
-    <canvas id="word" role="img" aria-label="PROMPT"></canvas>
-    <div class="hero-grid">
-      <h1>線上傳圖<em>反推提示詞</em>工具包</h1>
-      <div>
-        <p class="blurb">上傳一張圖片，由 Google Gemini 判讀畫面的主體、風格、構圖與光線，寫成可直接貼進繪圖模型的正向與反向提示詞。</p>
-        <ol class="flow" aria-label="流程">
-          <li>上傳圖片</li><li class="arrow" aria-hidden="true">→</li>
-          <li>Gemini 看圖</li><li class="arrow" aria-hidden="true">→</li>
-          <li>Prompt</li>
-        </ol>
-      </div>
-    </div>
+    <p class="eyebrow">Image → Prompt · Gemini Vision</p>
+    <h1>線上傳圖<em>反推提示詞</em>工具包</h1>
+    <p class="blurb">上傳一張圖片，由 Google Gemini 判讀畫面的主體、風格、構圖與光線，寫成可直接貼進繪圖模型的正向與反向提示詞。</p>
+    <ol class="flow" aria-label="流程">
+      <li>上傳圖片</li><li class="arrow" aria-hidden="true">→</li>
+      <li>Gemini 看圖</li><li class="arrow" aria-hidden="true">→</li>
+      <li>Prompt</li>
+    </ol>
     <div class="credit"><span>ChatGPT · Gemini · Stable Diffusion · Midjourney</span><span>Positive / Negative</span></div>
   </div>
 </header>
-<div class="band" id="band1" aria-hidden="true"></div>
 
 <main class="gutter">
   <div class="inner">
@@ -613,9 +616,9 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
   window.addEventListener('resize', function () { grow(posEl); grow(negEl); });
 })();
 </script>
-<div class="band" id="band2" aria-hidden="true"></div>
+<div class="cloudfoot" aria-hidden="true"></div>
 <footer class="foot gutter">
-  <p class="tagline">SEE iT.  PROMPT iT.</p>
+  <p class="tagline">看圖，寫出提示詞。</p>
   <small>線上傳圖反推提示詞工具包 · Gemini Vision</small>
 </footer>
 
@@ -625,78 +628,68 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
   /* ---------- 深淺色切換 ---------- */
   var root = document.documentElement;
   try { var saved = localStorage.getItem('theme'); if (saved === 'dark' || saved === 'light') root.dataset.theme = saved; } catch (e) {}
+  function isDark() { return root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
   document.getElementById('theme').addEventListener('click', function () {
-    var dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-    root.dataset.theme = dark ? 'light' : 'dark';
+    root.dataset.theme = isDark() ? 'light' : 'dark';
     try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
   });
-
-  /* ---------- 泡泡 ---------- */
-  var COLORS = ['#2f47ff', '#1a2cff', '#3d63ff', '#1e88ff', '#27b4f5', '#12d0ff', '#1fe3c0', '#41ef96', '#7f93ff', '#b5c3ff', '#dfe6ff', '#0f1fc4', '#5a46ff'];
-  function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  function bubbleCss(seed, n, maxR) {
-    var r = rng(seed), layers = [];
-    for (var i = 0; i < n; i++) {
-      var rad = Math.round(6 + (maxR - 6) * Math.pow(r(), 1.8)), x = Math.round(r() * 100), y = Math.round(r() * 100);
-      var c = COLORS[1 + Math.floor(r() * (COLORS.length - 1))];
-      layers.push('radial-gradient(circle at ' + x + '% ' + y + '%, ' + c + ' 0 ' + rad + 'px, transparent ' + (rad + .6) + 'px)');
-    }
-    return layers.reverse().join(', ') + ', ' + COLORS[0];
-  }
   var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.getElementById('band1').style.background = bubbleCss(102, 90, 44);
-  document.getElementById('band2').style.background = bubbleCss(2077, 90, 44);
 
-  /* ---------- 3D 泡泡帶（three.js）：立體球體漂浮，跟著游標轉動，可拖曳旋轉 ---------- */
+  /* ---------- 彩色雲朵（three.js）：多顆柔邊雲團疊成一朵雲，緩慢飄過，跟著游標產生視差 ---------- */
   (function () {
-    var host = document.getElementById('band1');
-    if (!window.THREE) return;
+    var host = document.getElementById('sky');
+    if (!window.THREE || !host) return;
     var renderer;
-    try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' }); } catch (e) { return; }
-    host.style.background = COLORS[0]; host.classList.add('live');
-    host.appendChild(renderer.domElement);
-    var hint = document.createElement('p'); hint.className = 'band-hint'; hint.textContent = '拖曳轉動'; host.appendChild(hint);
+    try { renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' }); } catch (e) { return; }
+    renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    var scene = new THREE.Scene(); scene.background = new THREE.Color(COLORS[0]);
-    var camera = new THREE.PerspectiveCamera(32, 2, .1, 100); camera.position.z = 15;
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x1a2cff, 2.4));
-    var sun = new THREE.DirectionalLight(0xffffff, 2.6); sun.position.set(4, 6, 8); scene.add(sun);
-    var N = 170, r = rng(4242), group = new THREE.Group(); scene.add(group);
-    var mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 28, 20), new THREE.MeshStandardMaterial({ roughness: .32, metalness: .08 }), N);
-    var items = [], col = new THREE.Color(), dummy = new THREE.Object3D();
-    for (var i = 0; i < N; i++) {
-      items.push({ u: r() - .5, y: (r() - .5) * 7, z: -7 + r() * 9, s: .14 + 1.05 * Math.pow(r(), 2.4), ph: r() * 6.283, sp: .25 + r() * .6, drift: .004 + r() * .012 });
-      mesh.setColorAt(i, col.set(COLORS[1 + Math.floor(r() * (COLORS.length - 1))]));
+    host.appendChild(renderer.domElement);
+    var scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(40, 2, .1, 100); camera.position.z = 20;
+    var tc = document.createElement('canvas'); tc.width = tc.height = 128;
+    var g = tc.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.6, 'rgba(255,255,255,.92)'); gr.addColorStop(.86, 'rgba(255,255,255,.3)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    var tex = new THREE.CanvasTexture(tc);
+    var HUES = ['#ff8fc1', '#ffb877', '#b59cff', '#7fd3ff', '#8febc8', '#ffe58f', '#ff8fc1', '#7fd3ff'];
+    var seed = 7;
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    var clouds = [], mats = [], TAN = Math.tan(40 * Math.PI / 360), aspect = 2;
+    for (var c = 0; c < 12; c++) {
+      var grp = new THREE.Group(), z = -12 + rnd() * 16, scale = 1.2 + rnd() * 1.7;
+      var h1 = HUES[Math.floor(rnd() * HUES.length)], h2 = HUES[Math.floor(rnd() * HUES.length)];
+      var n = 8 + Math.floor(rnd() * 5);
+      for (var k = 0; k < n; k++) {
+        var m = new THREE.SpriteMaterial({ map: tex, color: new THREE.Color(rnd() > .4 ? h1 : h2), transparent: true, depthWrite: false });
+        mats.push(m);
+        var sp = new THREE.Sprite(m), ox = (rnd() - .5) * 3.6 * scale, sz = (1.5 + rnd() * 1.6) * scale;
+        sp.position.set(ox, (1 - Math.abs(ox) / (2 * scale)) * rnd() * .9 * scale - .25 * scale, rnd() * .6);
+        sp.scale.set(sz, sz * .78, 1); grp.add(sp);
+      }
+      grp.position.set((rnd() - .5) * 40, (rnd() - .5) * 8, z); scene.add(grp);
+      clouds.push({ g: grp, x: grp.position.x, y: grp.position.y, z: z, v: .12 + rnd() * .3, ph: rnd() * 6.283, w: 3.2 * scale });
     }
-    mesh.instanceColor.needsUpdate = true; group.add(mesh);
-    var span = 20, tx = 0, ty = 0, dragX = 0, dragging = false, lastX = 0, vis = true, raf = 0;
+    var dark = null, px = 0, py = 0, vis = true, raf = 0, last = 0;
+    function theme() {
+      var d = isDark(); if (d === dark) return; dark = d;
+      mats.forEach(function (m) { m.blending = d ? THREE.AdditiveBlending : THREE.NormalBlending; m.opacity = d ? .11 : .9; m.needsUpdate = true; });
+    }
     function size() {
       var w = host.clientWidth, h = host.clientHeight; if (!w || !h) return;
-      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
-      span = 2 * Math.tan(camera.fov * Math.PI / 360) * 22 * camera.aspect + 3;
+      renderer.setSize(w, h, false); aspect = w / h; camera.aspect = aspect; camera.updateProjectionMatrix();
     }
     function frame(ms) {
-      var t = ms / 1000;
-      for (var i = 0; i < N; i++) {
-        var b = items[i];
-        if (!still) { b.u += b.drift * .016; if (b.u > .5) b.u -= 1; }
-        dummy.position.set(b.u * span, b.y + Math.sin(t * b.sp + b.ph) * .35, b.z + Math.cos(t * b.sp * .7 + b.ph) * .3);
-        dummy.scale.setScalar(b.s); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
-      }
-      mesh.instanceMatrix.needsUpdate = true;
-      group.rotation.y += (tx * .28 + dragX - group.rotation.y) * .06;
-      group.rotation.x += (ty * .16 - group.rotation.x) * .06;
+      var t = ms / 1000, dt = Math.min(.05, t - last); last = t; theme();
+      clouds.forEach(function (o) {
+        var half = TAN * (20 - o.z) * aspect + o.w;
+        if (!still) { o.x += o.v * dt; if (o.x > half) o.x = -half; }
+        o.g.position.x = o.x + px * (o.z + 14) * .18;
+        o.g.position.y = o.y + Math.sin(t * .4 + o.ph) * .25 - py * (o.z + 14) * .1;
+      });
       renderer.render(scene, camera);
     }
     function loop(ms) { raf = 0; if (!vis || document.hidden) return; frame(ms); if (!still) raf = requestAnimationFrame(loop); }
     function kick() { if (!raf && vis && !document.hidden) raf = requestAnimationFrame(loop); }
-    window.addEventListener('pointermove', function (e) {
-      tx = e.clientX / window.innerWidth - .5; ty = e.clientY / window.innerHeight - .5;
-      if (dragging) { dragX += (e.clientX - lastX) * .006; lastX = e.clientX; }
-      if (still) kick();
-    });
-    host.addEventListener('pointerdown', function (e) { dragging = true; lastX = e.clientX; host.style.cursor = 'grabbing'; });
-    window.addEventListener('pointerup', function () { dragging = false; host.style.cursor = ''; });
+    window.addEventListener('pointermove', function (e) { px = e.clientX / innerWidth - .5; py = e.clientY / innerHeight - .5; if (still) kick(); });
     if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { vis = en[0].isIntersecting; kick(); }).observe(host);
     document.addEventListener('visibilitychange', kick);
     window.addEventListener('resize', function () { size(); kick(); });
@@ -704,57 +697,13 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
   })();
 
   /* ---------- 捲動進場 ---------- */
-  if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if ('IntersectionObserver' in window && !still) {
     var io = new IntersectionObserver(function (en) { en.forEach(function (e) { if (e.isIntersecting) { var el = e.target; el.classList.add('in'); io.unobserve(el); setTimeout(function () { el.style.setProperty('--d', '0ms'); }, 1300); } }); }, { rootMargin: '0px 0px -8% 0px' });
     document.querySelectorAll('.guide, .col').forEach(function (wrap) {
       var list = wrap.classList.contains('col') ? wrap.children : [wrap];
       Array.prototype.forEach.call(list, function (el, i) { el.classList.add('reveal'); el.style.setProperty('--d', (i * 90) + 'ms'); io.observe(el); });
     });
   }
-
-  /* 巨大字標：字形內填滿緩慢漂移的泡泡，點一下會破 */
-  var cv = document.getElementById('word'), ctx = cv.getContext('2d'), TXT = 'PROMPT';
-  var FONT = '"Poppins","Montserrat","Avenir Next","Century Gothic","Futura",system-ui,sans-serif';
-  var W = 0, H = 0, fs = 0, bubbles = [], visible = true, still = matchMedia('(prefers-reduced-motion: reduce)').matches, raf = 0;
-  function layout() {
-    W = cv.clientWidth; if (!W) return;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    ctx.font = '800 100px ' + FONT;
-    fs = 100 * W / ctx.measureText(TXT).width * .985; H = Math.round(fs * .75);
-    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var r = rng(102), unit = Math.max(6, H * .12), n = Math.min(1400, Math.max(12, Math.round(W * H / (unit * unit * 1.25) * 1.5)));
-    bubbles = [];
-    for (var i = 0; i < n; i++) {
-      var rad = unit * (.22 + 1.3 * Math.pow(r(), 2.3));
-      bubbles.push({ x: r() * (W + rad) - rad / 2, y: r() * (H + rad) - rad / 2, r: rad, c: 1 + Math.floor(r() * (COLORS.length - 1)), ph: r() * 6.283, amp: 1 + r() * 3.5, sp: .25 + r() * .6 });
-    }
-    bubbles.sort(function (a, b) { return b.r - a.r; });
-    draw(0);
-  }
-  function draw(t) {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.clearRect(0, 0, W, H);
-    ctx.font = '800 ' + fs + 'px ' + FONT; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = COLORS[0];
-    ctx.fillText(TXT, (W - ctx.measureText(TXT).width) / 2, H * .985);
-    ctx.globalCompositeOperation = 'source-atop';
-    for (var i = 0; i < bubbles.length; i++) {
-      var b = bubbles[i]; if (!b.r) continue;
-      ctx.fillStyle = COLORS[b.c]; ctx.beginPath();
-      ctx.arc(b.x + Math.sin(t * b.sp + b.ph) * b.amp, b.y + Math.cos(t * b.sp * .8 + b.ph) * b.amp, b.r, 0, 6.283); ctx.fill();
-    }
-  }
-  function loop(ms) { raf = 0; if (!visible || still || document.hidden) return; draw(ms / 1000); raf = requestAnimationFrame(loop); }
-  function kick() { if (!raf && visible && !still && !document.hidden) raf = requestAnimationFrame(loop); }
-  cv.addEventListener('click', function (e) {
-    var q = cv.getBoundingClientRect(), x = e.clientX - q.left, y = e.clientY - q.top;
-    for (var i = bubbles.length - 1; i >= 0; i--) { var b = bubbles[i]; if (b.r && Math.hypot(b.x - x, b.y - y) < b.r + 3) { b.r = 0; if (still) draw(0); break; } }
-  });
-  if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { visible = en[0].isIntersecting; kick(); }).observe(cv);
-  document.addEventListener('visibilitychange', kick);
-  var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(layout, 120); });
-  layout(); kick();
-  if (document.fonts && document.fonts.load) document.fonts.load('800 100px Poppins').then(layout, function () {});
 })();
 </script>
 </body>
