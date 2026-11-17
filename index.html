@@ -102,6 +102,24 @@ button.small { padding: 4px 12px; font-size: 13px; }
 dl.notes { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; font-size: 14px; }
 dl.notes dt { color: var(--ink-2); font-weight: 500; }
 dl.notes dd { margin: 0; }
+.guide { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--shadow); margin-bottom: 24px; }
+.guide summary { cursor: pointer; padding: 14px 16px; font-weight: 700; font-size: 16px; }
+.guide summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.guide summary small { font-weight: 400; font-size: 13px; color: var(--ink-2); margin-left: 8px; }
+.steps { list-style: none; margin: 0; padding: 0 16px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; counter-reset: step; }
+.steps li { counter-increment: step; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.steps h3 { margin: 0; font-size: 14px; font-weight: 700; }
+.steps h3::before { content: counter(step); display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; margin-right: 8px; border-radius: 999px; background: var(--btn-bg); color: var(--btn-fg); font-family: var(--font-mono); font-size: 12px; }
+.steps p { margin: 0; font-size: 13px; color: var(--ink-2); }
+.mock { height: 96px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--bg); padding: 10px; display: flex; flex-direction: column; justify-content: center; gap: 8px; font-size: 12px; overflow: hidden; }
+.mock .bar { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-family: var(--font-mono); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mock .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex: none; }
+.mock .btn { align-self: flex-start; background: var(--btn-bg); color: var(--btn-fg); border-radius: var(--r-ctl); padding: 4px 12px; font-weight: 700; box-shadow: 0 0 0 3px var(--accent-soft); }
+.mock .row { display: flex; align-items: center; gap: 6px; }
+.mock .field-mock { flex: 1; min-width: 0; border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-ctl); padding: 4px 8px; font-family: var(--font-mono); letter-spacing: .1em; white-space: nowrap; overflow: hidden; }
+.mock .chip { border: 1px solid var(--accent); color: var(--accent); border-radius: var(--r-ctl); padding: 3px 8px; white-space: nowrap; box-shadow: 0 0 0 3px var(--accent-soft); }
+.mock .line { height: 6px; border-radius: 3px; background: var(--border); width: 60%; }
+.mock .cap { color: var(--ink-2); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -120,6 +138,48 @@ dl.notes dd { margin: 0; }
 </header>
 
 <main class="gutter">
+  <div class="inner">
+    <details class="guide" id="guide" open>
+      <summary>第一次使用：申請免費的 Gemini 金鑰<small>約 2 分鐘，不需信用卡</small></summary>
+      <ol class="steps">
+        <li>
+          <div class="mock" aria-hidden="true">
+            <div class="bar"><span class="dot"></span>aistudio.google.com/apikey</div>
+            <div class="line"></div>
+            <span class="cap">使用 Google 帳號登入</span>
+          </div>
+          <h3>開啟 Google AI Studio</h3>
+          <p>前往 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>，用 Google 帳號登入。學校帳號若被擋，改用個人 Gmail。</p>
+        </li>
+        <li>
+          <div class="mock" aria-hidden="true">
+            <span class="cap">API keys</span>
+            <span class="btn">Create API key</span>
+            <div class="line"></div>
+          </div>
+          <h3>建立金鑰</h3>
+          <p>按「Create API key」（建立 API 金鑰）。若詢問專案，選預設的專案即可。</p>
+        </li>
+        <li>
+          <div class="mock" aria-hidden="true">
+            <span class="cap">您的 API 金鑰</span>
+            <div class="row"><span class="field-mock">••••••••••••••••</span><span class="chip">複製</span></div>
+          </div>
+          <h3>複製金鑰</h3>
+          <p>畫面會顯示一長串英數字，按複製。這串金鑰等同個人額度，不要傳給別人。</p>
+        </li>
+        <li>
+          <div class="mock" aria-hidden="true">
+            <span class="cap">Gemini API 金鑰</span>
+            <div class="row"><span class="field-mock">••••••••••••••••</span></div>
+            <span class="cap">Ctrl+V 貼上</span>
+          </div>
+          <h3>貼回這個頁面</h3>
+          <p>回到本頁，貼進下方「Gemini API 金鑰」欄。出現「金鑰可用」就能上傳圖片開始分析。</p>
+        </li>
+      </ol>
+    </details>
+  </div>
   <div class="inner grid">
     <section class="col" aria-label="圖片與設定">
       <div class="panel">
@@ -403,6 +463,7 @@ dl.notes dd { margin: 0; }
     } catch (e) { setStatus('無法連線到 Google。請檢查網路，或確認瀏覽器沒有封鎖 generativelanguage.googleapis.com。', true); }
   }
   keyEl.value = load('gemini_key'); modelEl.value = load('gemini_model');
+  $('guide').open = !keyEl.value;   /* 已存有金鑰的人預設收合 */
   keyEl.addEventListener('change', function () { saveKey(); listModels(); });
   rememberEl.addEventListener('change', saveKey);
   modelEl.addEventListener('change', function () { store('gemini_model', modelEl.value.trim()); });
