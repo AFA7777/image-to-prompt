@@ -138,7 +138,46 @@ dl.notes dd { margin: 0; color: var(--soft); }
 .foot { padding-block: 22px 28px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
 .tagline { margin: 0; font-weight: 800; font-size: clamp(16px, 2.4vw, 26px); letter-spacing: .01em; color: var(--blue); white-space: pre-wrap; }
 .foot small { font-weight: 800; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- 動畫 ---------- */
+.band.live { height: clamp(170px, 26vw, 320px); position: relative; overflow: hidden; cursor: grab; }
+.band.live canvas { display: block; width: 100%; height: 100%; }
+.band-hint { position: absolute; right: clamp(16px, 4vw, 48px); bottom: 12px; margin: 0; padding: 3px 10px; border-radius: 999px; background: #0b0c16; color: #ffffff; font-weight: 800; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; pointer-events: none; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+@keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes pulse { 0%, 100% { box-shadow: 0 10px 24px -14px var(--blue), 0 0 0 0 var(--line-strong); } 50% { box-shadow: 0 10px 24px -14px var(--blue), 0 0 0 10px transparent; } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.hero h1 { animation: rise .9s cubic-bezier(.2, .8, .2, 1) both; }
+.hero .blurb, .hero .flow { animation: rise .9s .15s cubic-bezier(.2, .8, .2, 1) both; }
+.hero .credit { animation: rise .9s .3s cubic-bezier(.2, .8, .2, 1) both; }
+.flow li.arrow { animation: nudge 1.6s ease-in-out infinite; }
+.flow li.arrow + li + li.arrow { animation-delay: .3s; }
+
+/* 捲動進場：由腳本加上 .reveal 才會先隱藏，沒有腳本時內容照常顯示 */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.2, .8, .2, 1), transform .7s cubic-bezier(.2, .8, .2, 1), border-color .3s; transition-delay: var(--d, 0ms); }
+.reveal.in { opacity: 1; transform: none; }
+.panel, .guide { transition: border-color .3s; }
+.panel.reveal, .guide.reveal { transition: opacity .7s cubic-bezier(.2, .8, .2, 1), transform .7s cubic-bezier(.2, .8, .2, 1), border-color .3s; transition-delay: var(--d, 0ms); }
+.panel:hover, .guide:hover { border-color: var(--blue); }
+
+/* 分析中：圖片上的掃描光、結果欄的流光、按鈕脈動 */
+.drop.scanning::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 35%, color-mix(in srgb, var(--blue) 55%, transparent) 50%, transparent 65%); animation: scan 1.8s ease-in-out infinite alternate; pointer-events: none; }
+.drop.scanning { border-style: solid; border-color: var(--blue); }
+body.busy textarea.out { background-image: linear-gradient(100deg, transparent 30%, var(--line-strong) 50%, transparent 70%); background-size: 200% 100%; animation: shimmer 1.5s linear infinite; }
+body.busy button.primary { animation: pulse 1.4s ease-out infinite; }
+.arrived { animation: pop-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+button.primary:hover:not(:disabled) { transform: translateY(-2px); }
+.steps li .mock { transition: transform .35s cubic-bezier(.2, .8, .2, 1), border-color .3s; }
+.steps li:hover .mock { transform: translateY(-4px); border-color: var(--blue); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+  .reveal { opacity: 1; transform: none; }
+}
 </style>
 </head>
 <body>
@@ -506,7 +545,11 @@ dl.notes dd { margin: 0; color: var(--soft); }
   modelEl.addEventListener('change', function () { store('gemini_model', modelEl.value.trim()); });
   if (keyEl.value) listModels();
 
-  function setBusy(on) { busy = on; goBtn.disabled = on; stopBtn.hidden = !on; }
+  function setBusy(on) {
+    busy = on; goBtn.disabled = on; stopBtn.hidden = !on;
+    drop.classList.toggle('scanning', on); document.body.classList.toggle('busy', on);
+    if (!on) [posEl, negEl, notesEl].forEach(function (el) { el.classList.remove('arrived'); void el.offsetWidth; if (el.value || el.childElementCount) el.classList.add('arrived'); });
+  }
   /* 送出前縮到長邊 1536 像素的 JPEG，節省流量與額度 */
   async function toBase64() {
     var srcImg = userBlob ? await createImageBitmap(userBlob) : demo;
@@ -576,6 +619,7 @@ dl.notes dd { margin: 0; color: var(--soft); }
   <small>線上傳圖反推提示詞工具包 · Gemini Vision</small>
 </footer>
 
+<script src="three.min.js"></script>
 <script>
 (function () {
   /* ---------- 深淺色切換 ---------- */
@@ -599,8 +643,74 @@ dl.notes dd { margin: 0; color: var(--soft); }
     }
     return layers.reverse().join(', ') + ', ' + COLORS[0];
   }
+  var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.getElementById('band1').style.background = bubbleCss(102, 90, 44);
   document.getElementById('band2').style.background = bubbleCss(2077, 90, 44);
+
+  /* ---------- 3D 泡泡帶（three.js）：立體球體漂浮，跟著游標轉動，可拖曳旋轉 ---------- */
+  (function () {
+    var host = document.getElementById('band1');
+    if (!window.THREE) return;
+    var renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' }); } catch (e) { return; }
+    host.style.background = COLORS[0]; host.classList.add('live');
+    host.appendChild(renderer.domElement);
+    var hint = document.createElement('p'); hint.className = 'band-hint'; hint.textContent = '拖曳轉動'; host.appendChild(hint);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    var scene = new THREE.Scene(); scene.background = new THREE.Color(COLORS[0]);
+    var camera = new THREE.PerspectiveCamera(32, 2, .1, 100); camera.position.z = 15;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x1a2cff, 2.4));
+    var sun = new THREE.DirectionalLight(0xffffff, 2.6); sun.position.set(4, 6, 8); scene.add(sun);
+    var N = 170, r = rng(4242), group = new THREE.Group(); scene.add(group);
+    var mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 28, 20), new THREE.MeshStandardMaterial({ roughness: .32, metalness: .08 }), N);
+    var items = [], col = new THREE.Color(), dummy = new THREE.Object3D();
+    for (var i = 0; i < N; i++) {
+      items.push({ u: r() - .5, y: (r() - .5) * 7, z: -7 + r() * 9, s: .14 + 1.05 * Math.pow(r(), 2.4), ph: r() * 6.283, sp: .25 + r() * .6, drift: .004 + r() * .012 });
+      mesh.setColorAt(i, col.set(COLORS[1 + Math.floor(r() * (COLORS.length - 1))]));
+    }
+    mesh.instanceColor.needsUpdate = true; group.add(mesh);
+    var span = 20, tx = 0, ty = 0, dragX = 0, dragging = false, lastX = 0, vis = true, raf = 0;
+    function size() {
+      var w = host.clientWidth, h = host.clientHeight; if (!w || !h) return;
+      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+      span = 2 * Math.tan(camera.fov * Math.PI / 360) * 22 * camera.aspect + 3;
+    }
+    function frame(ms) {
+      var t = ms / 1000;
+      for (var i = 0; i < N; i++) {
+        var b = items[i];
+        if (!still) { b.u += b.drift * .016; if (b.u > .5) b.u -= 1; }
+        dummy.position.set(b.u * span, b.y + Math.sin(t * b.sp + b.ph) * .35, b.z + Math.cos(t * b.sp * .7 + b.ph) * .3);
+        dummy.scale.setScalar(b.s); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      group.rotation.y += (tx * .28 + dragX - group.rotation.y) * .06;
+      group.rotation.x += (ty * .16 - group.rotation.x) * .06;
+      renderer.render(scene, camera);
+    }
+    function loop(ms) { raf = 0; if (!vis || document.hidden) return; frame(ms); if (!still) raf = requestAnimationFrame(loop); }
+    function kick() { if (!raf && vis && !document.hidden) raf = requestAnimationFrame(loop); }
+    window.addEventListener('pointermove', function (e) {
+      tx = e.clientX / window.innerWidth - .5; ty = e.clientY / window.innerHeight - .5;
+      if (dragging) { dragX += (e.clientX - lastX) * .006; lastX = e.clientX; }
+      if (still) kick();
+    });
+    host.addEventListener('pointerdown', function (e) { dragging = true; lastX = e.clientX; host.style.cursor = 'grabbing'; });
+    window.addEventListener('pointerup', function () { dragging = false; host.style.cursor = ''; });
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { vis = en[0].isIntersecting; kick(); }).observe(host);
+    document.addEventListener('visibilitychange', kick);
+    window.addEventListener('resize', function () { size(); kick(); });
+    size(); kick();
+  })();
+
+  /* ---------- 捲動進場 ---------- */
+  if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var io = new IntersectionObserver(function (en) { en.forEach(function (e) { if (e.isIntersecting) { var el = e.target; el.classList.add('in'); io.unobserve(el); setTimeout(function () { el.style.setProperty('--d', '0ms'); }, 1300); } }); }, { rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('.guide, .col').forEach(function (wrap) {
+      var list = wrap.classList.contains('col') ? wrap.children : [wrap];
+      Array.prototype.forEach.call(list, function (el, i) { el.classList.add('reveal'); el.style.setProperty('--d', (i * 90) + 'ms'); io.observe(el); });
+    });
+  }
 
   /* 巨大字標：字形內填滿緩慢漂移的泡泡，點一下會破 */
   var cv = document.getElementById('word'), ctx = cv.getContext('2d'), TXT = 'PROMPT';
