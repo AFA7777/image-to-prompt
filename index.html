@@ -8,40 +8,30 @@
 <style>
 /* Layout: 深藍霓虹標題帶 + 淺色工作區；左欄放圖片與設定，右欄放正向／反向提示詞與畫面解析，窄螢幕疊成單欄 */
 :root {
-  --bg: #f4f6fa;
-  --surface: #ffffff;
-  --ink: #131a2c;
-  --ink-2: #55607a;
-  --border: #d9dfea;
-  --accent: #08758c;
-  --accent-soft: #e2f4f8;
-  --neg: #b0257f;
-  --neg-soft: #fbe9f5;
-  --danger: #b3261e;
+  /* 單一深色主題：數位未來風，深藍底、青色與洋紅霓虹、等寬字標籤、HUD 角框 */
+  --bg: #050816;
+  --surface: rgba(14, 21, 48, .78);
+  --field: #0a1024;
+  --ink: #e6ecff;
+  --ink-2: #93a0c8;
+  --border: #26315f;
+  --accent: #3de8ff;
+  --accent-soft: rgba(61, 232, 255, .12);
+  --neg: #ff6fe0;
+  --neg-soft: rgba(255, 79, 216, .14);
+  --danger: #ff8a80;
   --hero-bg: #0a1030;
-  --hero-ink: #dfe6ff;
+  --hero-ink: #c9d4ff;
   --neon-cyan: #3de8ff;
   --neon-magenta: #ff4fd8;
-  --btn-bg: #0a1030;
-  --btn-fg: #3de8ff;
-  --shadow: 0 2px 10px rgba(19, 26, 44, .07);
+  --grid-line: rgba(61, 232, 255, .05);
+  --btn-bg: #3de8ff;
+  --btn-fg: #050816;
+  --shadow: 0 0 24px rgba(61, 232, 255, .05);
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --r-ctl: 6px;
-  --r-card: 10px;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0b1020; --surface: #131a30; --ink: #e8ecf6; --ink-2: #9ba6c2; --border: #283252;
-    --accent: #3de8ff; --accent-soft: #10303f; --neg: #ff7fe0; --neg-soft: #3a1436; --danger: #ff8a80;
-    --btn-bg: #3de8ff; --btn-fg: #0a1030; --shadow: 0 0 0 rgba(0,0,0,0);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0b1020; --surface: #131a30; --ink: #e8ecf6; --ink-2: #9ba6c2; --border: #283252;
-  --accent: #3de8ff; --accent-soft: #10303f; --neg: #ff7fe0; --neg-soft: #3a1436; --danger: #ff8a80;
-  --btn-bg: #3de8ff; --btn-fg: #0a1030; --shadow: 0 0 0 rgba(0,0,0,0);
+  --r-ctl: 2px;
+  --r-card: 4px;
   color-scheme: dark;
 }
 
@@ -120,13 +110,49 @@ dl.notes dd { margin: 0; }
 .mock .chip { border: 1px solid var(--accent); color: var(--accent); border-radius: var(--r-ctl); padding: 3px 8px; white-space: nowrap; box-shadow: 0 0 0 3px var(--accent-soft); }
 .mock .line { height: 6px; border-radius: 3px; background: var(--border); width: 60%; }
 .mock .cap { color: var(--ink-2); }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- 數位未來風 ---------- */
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 420px at 50% 0, rgba(61, 232, 255, .14), transparent 70%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: auto, 44px 44px, 44px 44px;
+  background-repeat: no-repeat, repeat, repeat;
+}
+.hero { position: relative; overflow: hidden; background: linear-gradient(180deg, rgba(10, 16, 48, .92), rgba(5, 8, 22, .35)); border-bottom: 1px solid var(--border); padding-block: 44px 36px; }
+.hero::after { content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 30%; background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-magenta), transparent); animation: sweep 7s linear infinite; }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(440%); } }
+.hero h1 { font-size: clamp(28px, 5.4vw, 46px); }
+.hero p.eyebrow { margin: 0 0 10px; font-family: var(--font-mono); font-size: 12px; letter-spacing: .18em; color: var(--neon-magenta); }
+.flow li { border-color: var(--border); background: rgba(61, 232, 255, .04); }
+.panel, .guide { position: relative; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.panel::before, .guide::before, .panel::after, .guide::after { content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none; }
+.panel::before, .guide::before { top: -1px; left: -1px; border-top: 2px solid var(--neon-cyan); border-left: 2px solid var(--neon-cyan); }
+.panel::after, .guide::after { right: -1px; bottom: -1px; border-right: 2px solid var(--neon-magenta); border-bottom: 2px solid var(--neon-magenta); }
+h2::before { content: "//"; margin-right: 8px; font-family: var(--font-mono); font-weight: 500; color: var(--accent); }
+select, textarea, input[type="password"], input[type="text"] { background: var(--field); }
+select:focus, textarea:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+textarea.out { background: var(--field); color: #d7f9ff; }
+.drop { background: rgba(10, 16, 36, .6); border-color: rgba(61, 232, 255, .35); }
+.drop:hover, .drop.over { box-shadow: inset 0 0 28px rgba(61, 232, 255, .12); }
+.drop .tag.demo, .mock { background: var(--field); }
+.tag.demo { background: transparent; }
+button { background: var(--field); }
+button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); filter: none; }
+button.primary { letter-spacing: .1em; box-shadow: 0 0 18px rgba(61, 232, 255, .35); }
+button.primary:hover:not(:disabled) { color: var(--btn-fg); box-shadow: 0 0 28px rgba(61, 232, 255, .6); }
+.status { font-family: var(--font-mono); font-size: 12px; }
+dl.notes dt { font-family: var(--font-mono); color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .hero::after { animation: none; width: 100%; } }
 </style>
 </head>
 <body>
 
 <header class="hero gutter">
   <div class="inner">
+    <p class="eyebrow">IMAGE → PROMPT // GEMINI VISION</p>
     <h1>線上傳圖反推提示詞工具包</h1>
     <p>上傳一張圖片，由 Google Gemini 判讀畫面的主體、風格、構圖與光線，寫成可直接貼進繪圖模型的正向與反向提示詞。</p>
     <ol class="flow" aria-label="流程">
