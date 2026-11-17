@@ -162,6 +162,7 @@ dl.notes dd { margin: 0; color: var(--soft); }
 /* footer */
 .foot { padding-block: 22px 28px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
 .tagline { margin: 0; font-weight: 800; font-size: clamp(16px, 2.4vw, 26px); letter-spacing: .01em; color: var(--blue); white-space: pre-wrap; }
+.foot .sign { flex-basis: 100%; font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: .06em; text-transform: none; color: var(--blue); }
 .foot small { font-weight: 800; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 
 /* ---------- 動畫 ---------- */
@@ -637,7 +638,8 @@ button.primary:hover:not(:disabled) { transform: translateY(-2px); }
 <div class="cloudfoot" aria-hidden="true"></div>
 <footer class="foot gutter">
   <p class="tagline">看圖，寫出提示詞。</p>
-  <small>線上傳圖反推提示詞工具包 · Gemini Vision · v0.6</small>
+  <small>線上傳圖反推提示詞工具包 · Gemini Vision · v0.7</small>
+  <small class="sign">design: mengfan</small>
 </footer>
 
 <div id="boom" hidden role="alert"><b>百鳥斬!!</b><span>請愛護小動物!!!</span></div>
