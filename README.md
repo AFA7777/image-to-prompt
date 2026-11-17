@@ -1,4 +1,4 @@
-# 看圖反推提示詞
+# 線上傳圖反推提示詞工具包
 
 上傳圖片，由 Google Gemini 判讀畫面，產出可用於 ChatGPT、Gemini、Stable Diffusion 的正向與反向提示詞。
 
